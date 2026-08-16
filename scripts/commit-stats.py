@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """commit-stats: type-bucket analytics over git history.
 
-Buckets every commit by the type ladder in ~/.claude/COMMIT-FORMAT.md and
+Buckets every commit by the type ladder in ~/.ai-commit-standard/AI-COMMIT-STANDARD.md and
 reports, per repo and overall:
 
   - coverage: share of commits carrying a valid type (the rest are `untyped`)
@@ -47,7 +47,7 @@ def classify(subject):
     if subject.startswith(("fixup!", "squash!", "amend!")):
         return "wip"
     if subject.startswith(("Release ", "Bump build number", "Bump version")):
-        return "release"  # the house release format that predates the ladder
+        return "release"  # legacy release subjects that predate the ladder
     m = TYPED_RE.match(subject)
     if not m:
         return "untyped"

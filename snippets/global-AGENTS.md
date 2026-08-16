@@ -1,11 +1,11 @@
 ## Commit messages
 
-Read `~/.claude/COMMIT-FORMAT.md` before committing. It is enforced by a
+Read `~/.ai-commit-standard/AI-COMMIT-STANDARD.md` before committing. It is enforced by a
 `commit-msg` hook in every repo, so a non-conforming message will be rejected.
 
 Shape: `<type>: <Imperative sentence naming the user-visible outcome>`, blank
 line, body, blank line, trailers. Scopes only where the repo has a checked-in
-`.commit-scopes` registry listing them (`feat(dictation): ...`); otherwise none.
+`.commit-scopes` registry listing them (`feat(api): ...`); otherwise none.
 Manage the registry yourself: a new scope only for a lasting product module
 with no near-synonym listed, registered in the same commit that first uses it;
 one-off features are not modules.

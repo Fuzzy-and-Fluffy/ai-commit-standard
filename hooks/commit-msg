@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""commit-msg hook enforcing ~/.claude/COMMIT-FORMAT.md.
+"""commit-msg hook enforcing AI Commit Standard.
 
 Installed globally via core.hooksPath. Chains to a repo's own
 .git/hooks/commit-msg first, so per-repo hooks keep working.
@@ -11,7 +11,8 @@ import subprocess
 import sys
 import unicodedata
 
-SPEC = "~/.claude/COMMIT-FORMAT.md"
+SPEC = os.path.join(os.environ.get("AI_COMMIT_STANDARD_HOME", "~/.ai-commit-standard"),
+                    "AI-COMMIT-STANDARD.md")
 
 # Ordered ladder. Order matters and is the whole point: first match wins.
 LADDER = [
@@ -201,7 +202,7 @@ def main():
         if scope in TYPES:
             errors.append(
                 "scope '%s' collides with a type name. Scopes name product modules\n"
-                "  (keyboard, dictation); process concepts live on the type axis\n"
+                "  (api, web); process concepts live on the type axis\n"
                 "  (release: ships, build: how the artifact is made, ci: pipeline).\n"
                 "  Rename the module in .commit-scopes (e.g. '%s-tools')."
                 % (scope, scope)

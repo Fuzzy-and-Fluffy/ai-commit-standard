@@ -69,7 +69,7 @@ def main():
                              or subject.startswith(("fixup!", "squash!", "amend!"))):
             failures.append((sha[:9], subject,
                              "wip/fixup commit present; squash into a typed commit before merge"))
-    print("commit-format: checked %d commits" % len(lst))
+    print("ai-commit-standard: checked %d commits" % len(lst))
     for sha, subject, err in failures:
         print("\nFAIL %s %s" % (sha, subject))
         print("  " + err.replace("\n", "\n  "))

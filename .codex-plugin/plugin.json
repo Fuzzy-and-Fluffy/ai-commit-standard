@@ -1,0 +1,28 @@
+{
+  "name": "ai-commit-standard",
+  "version": "1.0.0",
+  "description": "A practical, enforceable and reusable commit standard for AI-assisted and vibe coding projects.",
+  "author": {
+    "name": "Fuzzy and Fluffy",
+    "url": "https://github.com/Fuzzy-and-Fluffy"
+  },
+  "homepage": "https://github.com/Fuzzy-and-Fluffy/ai-commit-standard",
+  "repository": "https://github.com/Fuzzy-and-Fluffy/ai-commit-standard",
+  "license": "MIT",
+  "keywords": ["git", "commits", "ai-coding", "vibe-coding", "codex", "claude-code"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "AI Commit Standard",
+    "shortDescription": "Clear, verified commits for AI-assisted coding",
+    "longDescription": "A deterministic commit classification standard with evidence trailers, registered scopes, local Git enforcement, CI validation, and history analytics for humans and coding agents.",
+    "developerName": "Fuzzy and Fluffy",
+    "category": "Developer Tools",
+    "capabilities": ["Write", "Validate", "Analyze"],
+    "websiteURL": "https://github.com/Fuzzy-and-Fluffy/ai-commit-standard",
+    "defaultPrompt": [
+      "Classify my changes and draft a compliant commit.",
+      "Explain why this commit message was rejected.",
+      "Analyze the quality of this repository's Git history."
+    ]
+  }
+}

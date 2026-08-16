@@ -1,5 +1,5 @@
-name: 'commit-format'
-description: 'Validate commit messages against COMMIT-FORMAT.md (type ladder + evidence trailers)'
+name: 'AI Commit Standard'
+description: 'Validate Git history with deterministic types and real evidence trailers'
 inputs:
   range:
     description: 'Explicit rev range A..B; default derives from the pull_request or push event'
@@ -17,4 +17,4 @@ runs:
       env:
         INPUT_RANGE: ${{ inputs.range }}
         INPUT_FORBID_WIP: ${{ inputs.forbid-wip }}
-      run: python3 "${{ github.action_path }}/check.py"
+      run: python3 "${{ github.action_path }}/action/check.py"

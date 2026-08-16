@@ -12,13 +12,13 @@ jobs:
       - name: Adversarial gate suite (44 cases)
         run: python3 tests/test_commit_gate.py
 
-  commit-format:
+  ai-commit-standard:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Validate commit messages (dogfood)
-        uses: ./action
+        uses: ./
         with:
           forbid-wip: 'true'

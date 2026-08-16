@@ -1,7 +1,7 @@
-## Commit messages (house format)
+## AI Commit Standard
 
 Every commit message follows this shape — enforced locally by a commit-msg
-hook and in CI by the commit-format action:
+hook and in CI by the AI Commit Standard action:
 
 ```
 <type>: <Imperative sentence naming the user-visible outcome>
@@ -22,7 +22,7 @@ automation) → `build` (project files, packaging, signing, dependencies) →
 `chore` (residue; re-walk the ladder once before using it).
 
 Scopes only when the repo root has a `.commit-scopes` registry listing them
-(`feat(dictation): ...`); otherwise none — the repository is the scope.
+(`feat(api): ...`); otherwise none — the repository is the scope.
 Manage the registry yourself: register a NEW scope only for a lasting product
 module with no near-synonym already listed (merge spellings, never fork them),
 adding the `.commit-scopes` line in the same commit that first uses it. One-off

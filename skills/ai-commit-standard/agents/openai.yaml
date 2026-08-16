@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Commit Standard"
+  short_description: "Write clear, verified commits for AI coding"
+  default_prompt: "Use $ai-commit-standard to classify these changes and create a compliant commit with real verification evidence."

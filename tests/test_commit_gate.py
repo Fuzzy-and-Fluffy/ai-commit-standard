@@ -18,7 +18,7 @@ CASES = [
     # --- must be REJECTED -------------------------------------------------
     (REJECT, "no type prefix at all", "Add stateful Windows navigation and Finder shortcuts\n"),
     (REJECT, "conventional type we dropped", "style: Reformat the parser\n"),
-    (REJECT, "scoped commit in a repo with NO .commit-scopes registry", "feat(keyboard): Add a thing\n\nBody.\n\nTests: x -> ok\n"),
+    (REJECT, "scoped commit in a repo with NO .commit-scopes registry", "feat(api): Add a thing\n\nBody.\n\nTests: x -> ok\n"),
     (REJECT, "unknown type", "hotfix: Patch the thing\n"),
     (REJECT, "lowercase after type", "chore: rename the worker entry point\n"),
     (REJECT, "trailing period", "chore: Rename the worker entry point.\n"),
@@ -39,7 +39,7 @@ CASES = [
     (REJECT, "empty Security trailer",
      "chore: Move secrets out of the tree\n\nThey were committed.\n\nSecurity:  \n"),
     (REJECT, "CJK subject over 88 columns",
-     "feat: 给笔记记录它们来自哪一个收藏夹并且在列表里显示出来同时保留原来的排序方式不变以及兼容旧数据\n"),
+     "feat: 让用户导出全部设置并且保留原来的排序方式同时兼容旧版本数据而且不包含任何私密字段\n"),
     (REJECT, "perf without a measurement",
      "perf: Make the sync cheaper\n\nIt fetched the homepage twice per run.\n"),
     (REJECT, "alias 'feature:'", "feature: Add a room dropdown\n"),
@@ -70,12 +70,12 @@ CASES = [
     (ACCEPT, "fix with Tests trailer",
      "fix: Stop paying for the same homepage twice\n\nIt fetched the homepage twice.\n\nTests: pytest -q -> 96 passed\n"),
     (ACCEPT, "feat with Evidence instead of Tests",
-     "feat: Give notes a source folder\n\nThey arrived untraceable.\n\nEvidence: live run -> 41 requests, was 78\n"),
+     "feat: Give profiles an export format\n\nThey arrived untraceable.\n\nEvidence: live run -> 41 requests, was 78\n"),
     (ACCEPT, "feat with Verified alias",
-     "feat: Give notes a source folder\n\nThey arrived untraceable.\n\nVerified: on device build 97\n"),
+     "feat: Give profiles an export format\n\nThey arrived untraceable.\n\nVerified: on device build 97\n"),
     (ACCEPT, "CJK subject inside the limit",
-     "feat: Give notes somewhere to record which 收藏夹 they came from\n\nThey arrived untraceable.\n\nTests: pytest -q -> 48 passed\n"),
-    (ACCEPT, "full house style with all trailers",
+     "feat: Give users a portable settings export\n\nThey arrived untraceable.\n\nTests: pytest -q -> 48 passed\n"),
+    (ACCEPT, "full standard message with all trailers",
      "fix: Reject duplicate registry listing IDs\n\nTwo listings could claim the same id.\n\n"
      "Tests: pytest tests/test_registry.py -q -> 31 passed\nCloses: #92\nSecurity: none\n"
      "Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>\n"),
@@ -106,15 +106,15 @@ def run(msg, cwd=None):
 
 
 SCOPED_CASES = [
-    # Run inside a fixture repo whose .commit-scopes registers: keyboard, dictation
+    # Run inside a fixture repo whose .commit-scopes registers: api, web
     (ACCEPT, "registered scope",
-     "feat(keyboard): Add a thing\n\nBody.\n\nTests: x -> ok\n"),
+     "feat(api): Add a thing\n\nBody.\n\nTests: x -> ok\n"),
     (ACCEPT, "unscoped commit in a registry repo",
      "feat: Add a thing\n\nBody.\n\nTests: x -> ok\n"),
     (REJECT, "unregistered scope",
      "feat(audio): Add a thing\n\nBody.\n\nTests: x -> ok\n"),
     (REJECT, "uppercase scope",
-     "feat(Keyboard): Add a thing\n\nBody.\n\nTests: x -> ok\n"),
+     "feat(Api): Add a thing\n\nBody.\n\nTests: x -> ok\n"),
     (REJECT, "scope colliding with a type name, even though registered",
      "fix(release): Repair the notarization step\n\nBody.\n\nTests: x -> ok\n"),
     (ACCEPT, "hyphenated registered scope",
@@ -152,7 +152,7 @@ def scoped_fixture():
     d = tempfile.mkdtemp(prefix="scope-fixture-")
     subprocess.run(["git", "init", "-q", d], check=True)
     with open(os.path.join(d, ".commit-scopes"), "w") as fh:
-        fh.write("# fixture registry\nkeyboard\ndictation  # trailing comment\nrelease\nasr-bench\n")
+        fh.write("# fixture registry\napi\nweb  # trailing comment\nrelease\nasr-bench\n")
     return d
 
 

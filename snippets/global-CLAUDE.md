@@ -1,10 +1,10 @@
-## Commit format (2026-08-14, global, enforced)
-- Every commit follows `~/.claude/COMMIT-FORMAT.md`. A `commit-msg` hook at
-  `~/.claude/git-hooks/` enforces it in every repo via global `core.hooksPath`.
+## AI Commit Standard
+- Every commit follows `~/.ai-commit-standard/AI-COMMIT-STANDARD.md`. A `commit-msg` hook at
+  `~/.ai-commit-standard/hooks/` enforces it in every repo via global `core.hooksPath`.
 - Shape: `<type>: <Imperative sentence naming the user-visible outcome>`, blank
   line, body explaining what was wrong before and why this approach, blank line,
   trailers. Scopes only where the repo has a checked-in `.commit-scopes`
-  registry listing them (`feat(dictation): ...`); otherwise none. Agents
+  registry listing them (`feat(api): ...`); otherwise none. Agents
   manage the registry themselves: a new scope only for a lasting product
   module with no near-synonym listed, registered in the same commit that
   first uses it; one-off features are not modules.
@@ -24,7 +24,7 @@
   `feat`, `fix`, and `perf`**), `Closes: #N`, `Refs: #N`, `Breaking:`,
   `Security:`, `Co-Authored-By:`, `Fixes: <sha>` (commit that introduced the
   bug, when known), `Reviewed-by:`, `Reverts: <sha>` (required on `revert`).
-- History analytics: `~/.claude/scripts/commit-stats.py REPO...` (coverage,
+- History analytics: `~/.ai-commit-standard/scripts/commit-stats.py REPO...` (coverage,
   per-type counts, evidence coverage, chore share; `--weekly` for trends).
 - Merge commits are not typed: keep git's generated message; the hook accepts
   it only during a real merge (MERGE_HEAD), so a subject merely spelled like

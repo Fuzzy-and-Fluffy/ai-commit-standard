@@ -1,31 +1,8 @@
 #!/usr/bin/env bash
-# Global pre-push hub. Installed to ~/.claude/git-hooks by install.sh.
-#
-# core.hooksPath makes git look ONLY here for hooks, which silently disables
-# any repo-local .git/hooks/pre-push. This hub restores them (chain first),
-# then runs the privacy-preflight scan when that skill is installed, so no
-# push leaves the machine unscanned.
+# Global pre-push hub. Chain a repository's own pre-push hook when present.
 set -uo pipefail
 
-REMOTE="${1:-origin}"
-URL="${2:-}"
-
-# 1. Chain to the repo's own pre-push hook, if any.
 GIT_DIR="$(git rev-parse --git-common-dir 2>/dev/null || true)"
 if [ -n "$GIT_DIR" ] && [ -x "$GIT_DIR/hooks/pre-push" ]; then
   "$GIT_DIR/hooks/pre-push" "$@" || exit $?
 fi
-
-# 2. Privacy scan (no-op when the skill is absent, e.g. on shared installs).
-if [ "${PRIVACY_PREFLIGHT_SKIP:-0}" = "1" ]; then
-  printf '\033[33m  privacy-preflight SKIPPED by PRIVACY_PREFLIGHT_SKIP=1\033[0m\n' >&2
-  exit 0
-fi
-SCAN="$HOME/.claude/skills/privacy-preflight/scripts/scan.sh"
-if [ -x "$SCAN" ]; then
-  if ! "$SCAN" push "$REMOTE" >&2; then
-    printf '\033[31m  push aborted by privacy-preflight\033[0m\n' >&2
-    exit 1
-  fi
-fi
-exit 0

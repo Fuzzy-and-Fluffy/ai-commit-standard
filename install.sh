@@ -1,20 +1,9 @@
 #!/usr/bin/env bash
-# Install the commit-format toolkit on this machine.
-#
-#   ./install.sh            install everything and verify
-#   ./install.sh check      verify only; also report drift between repo and installed copies
-#
-# What install does:
-#   1. Copies the hook, spec, analytics, and check tool into ~/.claude
-#   2. Copies the Claude Code skill into ~/.claude/skills/commit-format
-#   3. Splices the agent instructions into ~/.claude/CLAUDE.md and
-#      ~/.codex/AGENTS.md between managed-block markers (idempotent:
-#      re-running replaces the block, never duplicates it)
-#   4. Sets global core.hooksPath and proves the gate can fail
+# Install AI Commit Standard for Git, Codex, and Claude Code.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")" && pwd)"
-CLAUDE="$HOME/.claude"
+DATA_DIR="${AI_COMMIT_STANDARD_HOME:-$HOME/.ai-commit-standard}"
 MODE="${1:-install}"
 
 fail() { printf '\033[31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
@@ -22,37 +11,37 @@ ok()   { printf '\033[32m✓ %s\033[0m\n' "$*"; }
 info() { printf '  %s\n' "$*"; }
 
 PAIRS=(
-  "hooks/commit-msg|$CLAUDE/git-hooks/commit-msg"
-  "hooks/pre-push|$CLAUDE/git-hooks/pre-push"
-  "COMMIT-FORMAT.md|$CLAUDE/COMMIT-FORMAT.md"
-  "scripts/commit-stats.py|$CLAUDE/scripts/commit-stats.py"
-  "scripts/install-commit-format.sh|$CLAUDE/scripts/install-commit-format.sh"
-  "skill/commit-format/SKILL.md|$CLAUDE/skills/commit-format/SKILL.md"
+  "hooks/commit-msg|$DATA_DIR/hooks/commit-msg"
+  "hooks/pre-push|$DATA_DIR/hooks/pre-push"
+  "AI-COMMIT-STANDARD.md|$DATA_DIR/AI-COMMIT-STANDARD.md"
+  "scripts/commit-stats.py|$DATA_DIR/scripts/commit-stats.py"
+  "scripts/install-ai-commit-standard.sh|$DATA_DIR/scripts/install-ai-commit-standard.sh"
+  "skills/ai-commit-standard/SKILL.md|$HOME/.claude/skills/ai-commit-standard/SKILL.md"
+  "skills/ai-commit-standard/agents/openai.yaml|$HOME/.claude/skills/ai-commit-standard/agents/openai.yaml"
+  "skills/ai-commit-standard/SKILL.md|$HOME/.codex/skills/ai-commit-standard/SKILL.md"
+  "skills/ai-commit-standard/agents/openai.yaml|$HOME/.codex/skills/ai-commit-standard/agents/openai.yaml"
 )
 
-splice() {  # splice <target-file> <snippet-file>
-  python3 - "$1" "$2" <<'EOF'
+splice() {
+  python3 - "$1" "$2" <<'PY'
 import os, sys
 target, snippet = sys.argv[1], sys.argv[2]
-BEGIN = "<!-- BEGIN commit-format managed block -->"
-END = "<!-- END commit-format managed block -->"
-block = BEGIN + "\n" + open(snippet).read().strip("\n") + "\n" + END + "\n"
+begin = "<!-- BEGIN commit-format managed block -->"
+end = "<!-- END commit-format managed block -->"
+block = begin + "\n" + open(snippet, encoding="utf-8").read().strip("\n") + "\n" + end + "\n"
 os.makedirs(os.path.dirname(target), exist_ok=True)
-text = open(target).read() if os.path.exists(target) else ""
-if BEGIN in text and END in text:
-    head, rest = text.split(BEGIN, 1)
-    _, tail = rest.split(END, 1)
+text = open(target, encoding="utf-8").read() if os.path.exists(target) else ""
+if begin in text and end in text:
+    head, rest = text.split(begin, 1)
+    _, tail = rest.split(end, 1)
     text = head + block + tail.lstrip("\n")
-    action = "updated"
 elif text.strip():
     text = text.rstrip("\n") + "\n\n" + block
-    action = "appended"
 else:
     text = block
-    action = "created"
-open(target, "w").write(text)
-print("  %s managed block in %s" % (action, target))
-EOF
+with open(target, "w", encoding="utf-8") as fh:
+    fh.write(text)
+PY
 }
 
 case "$MODE" in
@@ -61,27 +50,29 @@ case "$MODE" in
     for pair in "${PAIRS[@]}"; do
       src="$REPO/${pair%%|*}"; dst="${pair##*|}"
       if [ ! -f "$dst" ]; then info "MISSING: $dst"; drift=1
-      elif ! diff -q "$src" "$dst" >/dev/null; then info "DRIFT:   $dst differs from repo"; drift=1
+      elif ! diff -q "$src" "$dst" >/dev/null; then info "DRIFT: $dst"; drift=1
       fi
     done
-    [ "$drift" = 0 ] && ok "installed copies match the repo" || info "run ./install.sh to update"
-    exec "$CLAUDE/scripts/install-commit-format.sh" check
+    [ "$drift" = 0 ] && ok "installed copies match this release" || fail "installed copies drifted; run ./install.sh"
+    exec "$DATA_DIR/scripts/install-ai-commit-standard.sh" check
     ;;
   install) ;;
   *) fail "unknown argument: $MODE (use: install | check)" ;;
 esac
 
-mkdir -p "$CLAUDE/git-hooks" "$CLAUDE/scripts" "$CLAUDE/skills/commit-format"
+mkdir -p "$DATA_DIR/hooks" "$DATA_DIR/scripts" \
+  "$HOME/.claude/skills/ai-commit-standard/agents" \
+  "$HOME/.codex/skills/ai-commit-standard/agents"
 for pair in "${PAIRS[@]}"; do
   cp "$REPO/${pair%%|*}" "${pair##*|}"
 done
-chmod +x "$CLAUDE/git-hooks/commit-msg" "$CLAUDE/git-hooks/pre-push" "$CLAUDE/scripts/install-commit-format.sh"
+chmod +x "$DATA_DIR/hooks/commit-msg" "$DATA_DIR/hooks/pre-push" \
+  "$DATA_DIR/scripts/install-ai-commit-standard.sh"
 
-splice "$CLAUDE/CLAUDE.md" "$REPO/snippets/global-CLAUDE.md"
+splice "$HOME/.claude/CLAUDE.md" "$REPO/snippets/global-CLAUDE.md"
 splice "$HOME/.codex/AGENTS.md" "$REPO/snippets/global-AGENTS.md"
 
-# hooksPath + prove-the-gate-can-fail live in the check tool; delegate.
-"$CLAUDE/scripts/install-commit-format.sh" install
+AI_COMMIT_STANDARD_HOME="$DATA_DIR" "$DATA_DIR/scripts/install-ai-commit-standard.sh" install
 
-ok "commit-format toolkit installed from $REPO"
-info "per-repo CI gate: see README.md (uses: Fuzzy-and-Fluffy/commit-format/action@main)"
+ok "AI Commit Standard installed from $REPO"
+info "GitHub Action: Fuzzy-and-Fluffy/ai-commit-standard@v1"
