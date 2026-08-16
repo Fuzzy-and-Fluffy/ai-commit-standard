@@ -1,8 +1,39 @@
 #!/usr/bin/env bash
-# Global pre-push hub. Chain a repository's own pre-push hook when present.
+# Global pre-push hub.
+#
+# Two extension points, both chained before this hook succeeds:
+#   1. the repository's own .git/hooks/pre-push
+#   2. a user-local hub next to this file, named pre-push.local
+#
+# (2) exists because core.hooksPath makes git look ONLY at that directory, so
+# installing this tool silently disables whatever pre-push the user already
+# had. install.sh copies `pre-push` and never touches `pre-push.local`, so
+# anything the user keeps there survives every upgrade and every `check`.
+#
+# This matters more than it looks. On 2026-08-16 a hooksPath move replaced a
+# hub that ran a personal-data scan with a chain-only hub. Pushes kept working,
+# nothing errored, and the gate was simply gone for the length of a 55-branch
+# force-push. A gate that breaks announces itself; a gate that is removed does
+# not. Put local checks in pre-push.local so an upgrade cannot quietly drop
+# them.
 set -uo pipefail
 
-GIT_DIR="$(git rev-parse --git-common-dir 2>/dev/null || true)"
-if [ -n "$GIT_DIR" ] && [ -x "$GIT_DIR/hooks/pre-push" ]; then
-  "$GIT_DIR/hooks/pre-push" "$@" || exit $?
+# NOT `GIT_DIR`: git exports that name into hook children, so assigning it
+# re-points their git calls at this repository. From a linked worktree that
+# made an earlier version of this hub misjudge every push.
+COMMON_DIR="$(git rev-parse --git-common-dir 2>/dev/null || true)"
+if [ -n "$COMMON_DIR" ] && [ -x "$COMMON_DIR/hooks/pre-push" ]; then
+  "$COMMON_DIR/hooks/pre-push" "$@" || exit $?
 fi
+
+LOCAL_HUB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/pre-push.local"
+if [ -x "$LOCAL_HUB" ]; then
+  "$LOCAL_HUB" "$@" || exit $?
+elif [ -e "$LOCAL_HUB" ]; then
+  # Present but not executable is a broken install, not an absent hook.
+  # Failing open here would silently unhook every push on this machine.
+  printf 'pre-push.local exists but is not executable — refusing to push\n' >&2
+  exit 1
+fi
+
+exit 0
