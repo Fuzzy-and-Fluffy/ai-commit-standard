@@ -1,5 +1,9 @@
 # AI Commit Standard
 
+<p align="center">
+  <img src="assets/ai-commit-standard-mark.svg" width="120" alt="AI Commit Standard verified Git commit mark">
+</p>
+
 A practical, enforceable and reusable commit standard for
 AI-assisted and vibe coding projects.
 
