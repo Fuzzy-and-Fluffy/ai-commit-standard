@@ -27,14 +27,9 @@ set -uo pipefail
 REFLINES=$(cat)
 feed_refs() { [ -n "$REFLINES" ] && printf '%s\n' "$REFLINES"; return 0; }
 
-# NOT `GIT_DIR`: git exports that name into hook children, so assigning it
-# re-points their git calls at this repository. From a linked worktree that
-# made an earlier version of this hub misjudge every push.
-COMMON_DIR="$(git rev-parse --git-common-dir 2>/dev/null || true)"
-if [ -n "$COMMON_DIR" ] && [ -x "$COMMON_DIR/hooks/pre-push" ]; then
-  feed_refs | "$COMMON_DIR/hooks/pre-push" "$@" || exit $?
-fi
-
+# The user-local hub runs FIRST: a repository's own hook may itself transfer
+# data (git-lfs uploads objects from its pre-push hook), so machine-wide gates
+# such as a personal-data scan must have passed before it gets to run.
 LOCAL_HUB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/pre-push.local"
 if [ -x "$LOCAL_HUB" ]; then
   feed_refs | "$LOCAL_HUB" "$@" || exit $?
@@ -43,6 +38,14 @@ elif [ -e "$LOCAL_HUB" ]; then
   # Failing open here would silently unhook every push on this machine.
   printf 'pre-push.local exists but is not executable — refusing to push\n' >&2
   exit 1
+fi
+
+# NOT `GIT_DIR`: git exports that name into hook children, so assigning it
+# re-points their git calls at this repository. From a linked worktree that
+# made an earlier version of this hub misjudge every push.
+COMMON_DIR="$(git rev-parse --git-common-dir 2>/dev/null || true)"
+if [ -n "$COMMON_DIR" ] && [ -x "$COMMON_DIR/hooks/pre-push" ]; then
+  feed_refs | "$COMMON_DIR/hooks/pre-push" "$@" || exit $?
 fi
 
 exit 0
