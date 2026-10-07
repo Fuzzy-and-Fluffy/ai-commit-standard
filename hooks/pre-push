@@ -1,8 +1,51 @@
 #!/usr/bin/env bash
-# Global pre-push hub. Chain a repository's own pre-push hook when present.
+# Global pre-push hub.
+#
+# Two extension points, both chained before this hook succeeds:
+#   1. the repository's own .git/hooks/pre-push
+#   2. a user-local hub next to this file, named pre-push.local
+#
+# (2) exists because core.hooksPath makes git look ONLY at that directory, so
+# installing this tool silently disables whatever pre-push the user already
+# had. install.sh copies `pre-push` and never touches `pre-push.local`, so
+# anything the user keeps there survives every upgrade and every `check`.
+#
+# This matters more than it looks. On 2026-08-16 a hooksPath move replaced a
+# hub that ran a personal-data scan with a chain-only hub. Pushes kept working,
+# nothing errored, and the gate was simply gone for the length of a 55-branch
+# force-push. A gate that breaks announces itself; a gate that is removed does
+# not. Put local checks in pre-push.local so an upgrade cannot quietly drop
+# them.
 set -uo pipefail
 
-GIT_DIR="$(git rev-parse --git-common-dir 2>/dev/null || true)"
-if [ -n "$GIT_DIR" ] && [ -x "$GIT_DIR/hooks/pre-push" ]; then
-  "$GIT_DIR/hooks/pre-push" "$@" || exit $?
+# git writes the pushed-ref list ("<local ref> <sha> <remote ref> <sha>" per
+# line) to the hook's stdin exactly once. Every chained hook needs it — a
+# repository hook that reads it would otherwise leave pre-push.local an empty
+# list, which is also what git legitimately sends for an up-to-date push, so
+# the downstream hook could not tell "nothing to send" from "already read".
+# Capture it here and hand each child its own copy.
+REFLINES=$(cat)
+feed_refs() { [ -n "$REFLINES" ] && printf '%s\n' "$REFLINES"; return 0; }
+
+# The user-local hub runs FIRST: a repository's own hook may itself transfer
+# data (git-lfs uploads objects from its pre-push hook), so machine-wide gates
+# such as a personal-data scan must have passed before it gets to run.
+LOCAL_HUB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/pre-push.local"
+if [ -x "$LOCAL_HUB" ]; then
+  feed_refs | "$LOCAL_HUB" "$@" || exit $?
+elif [ -e "$LOCAL_HUB" ]; then
+  # Present but not executable is a broken install, not an absent hook.
+  # Failing open here would silently unhook every push on this machine.
+  printf 'pre-push.local exists but is not executable — refusing to push\n' >&2
+  exit 1
 fi
+
+# NOT `GIT_DIR`: git exports that name into hook children, so assigning it
+# re-points their git calls at this repository. From a linked worktree that
+# made an earlier version of this hub misjudge every push.
+COMMON_DIR="$(git rev-parse --git-common-dir 2>/dev/null || true)"
+if [ -n "$COMMON_DIR" ] && [ -x "$COMMON_DIR/hooks/pre-push" ]; then
+  feed_refs | "$COMMON_DIR/hooks/pre-push" "$@" || exit $?
+fi
+
+exit 0
