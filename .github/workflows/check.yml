@@ -11,6 +11,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Adversarial gate suite (44 cases)
         run: python3 tests/test_commit_gate.py
+      - name: Installer leaves generated agent roots alone
+        run: python3 tests/test_install_roots.py
 
   ai-commit-standard:
     runs-on: ubuntu-latest
