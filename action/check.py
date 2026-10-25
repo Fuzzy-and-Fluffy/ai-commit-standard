@@ -20,8 +20,8 @@ import tempfile
 HOOK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "hooks", "commit-msg")
 
 
-def rev_list(rng):
-    out = subprocess.run(["git", "rev-list", "--no-merges", rng],
+def rev_list(*revs):
+    out = subprocess.run(["git", "rev-list", "--no-merges", *revs],
                          capture_output=True, text=True)
     if out.returncode:
         sys.stderr.write(out.stderr)
@@ -41,7 +41,11 @@ def shas():
             return rev_list("%s..%s" % (pr["base"]["sha"], pr["head"]["sha"]))
         commits = ev.get("commits")
         if commits is not None:
-            return [c["id"] for c in commits]
+            # A push lists merge commits too; skip them by topology, as the
+            # pull_request range above does, so git's generated "Merge pull
+            # request #N" message is never judged as ordinary work.
+            ids = [c["id"] for c in commits]
+            return rev_list("--no-walk", *ids) if ids else []
     sys.stderr.write("no range: set INPUT_RANGE=A..B or run inside GitHub Actions\n")
     sys.exit(2)
 
